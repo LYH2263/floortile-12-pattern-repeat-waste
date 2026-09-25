@@ -18,7 +18,8 @@ def init_db():
             name TEXT NOT NULL,
             tile_l REAL NOT NULL,
             tile_w REAL NOT NULL,
-            data_quality TEXT NOT NULL DEFAULT 'clean'
+            data_quality TEXT NOT NULL DEFAULT 'clean',
+            pattern_cycle REAL NOT NULL DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS calc_runs(
@@ -32,6 +33,7 @@ def init_db():
         );
         """
     )
+    _ensure_column(conn, "tiles", "pattern_cycle", "pattern_cycle REAL NOT NULL DEFAULT 0")
     if conn.execute("SELECT COUNT(*) c FROM rooms").fetchone()["c"] == 0:
         conn.executemany(
             "INSERT INTO rooms(name,length,width,data_quality,note) VALUES (?,?,?,?,?)",
@@ -42,13 +44,21 @@ def init_db():
             ],
         )
         conn.executemany(
-            "INSERT INTO tiles(name,tile_l,tile_w,data_quality) VALUES (?,?,?,?)",
+            "INSERT INTO tiles(name,tile_l,tile_w,data_quality,pattern_cycle) VALUES (?,?,?,?,?)",
             [
-                ("600x600", 0.6, 0.6, "clean"),
-                ("800x800", 0.8, 0.8, "clean"),
-                ("脏数据-零面积", 0.0, 0.6, "dirty"),
+                ("600x600", 0.6, 0.6, "clean", 0.0),
+                ("800x800", 0.8, 0.8, "clean", 2.0),
+                ("脏数据-零面积", 0.0, 0.6, "dirty", 0.0),
             ],
         )
         conn.execute("INSERT INTO settings(key,value) VALUES ('waste_pct','8')")
         conn.commit()
     conn.close()
+
+
+def _ensure_column(conn, table: str, column: str, ddl: str):
+    """Add a column to an existing database (fresh CREATE TABLE already has it)."""
+    cols = [r["name"] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+    if column not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {ddl}")
+        conn.commit()
