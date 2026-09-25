@@ -18,7 +18,8 @@ def init_db():
             name TEXT NOT NULL,
             tile_l REAL NOT NULL,
             tile_w REAL NOT NULL,
-            data_quality TEXT NOT NULL DEFAULT 'clean'
+            data_quality TEXT NOT NULL DEFAULT 'clean',
+            pattern_cycle REAL NOT NULL DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS calc_runs(
@@ -32,6 +33,10 @@ def init_db():
         );
         """
     )
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(tiles)").fetchall()}
+    if "pattern_cycle" not in cols:
+        conn.execute("ALTER TABLE tiles ADD COLUMN pattern_cycle REAL NOT NULL DEFAULT 0")
+        conn.commit()
     if conn.execute("SELECT COUNT(*) c FROM rooms").fetchone()["c"] == 0:
         conn.executemany(
             "INSERT INTO rooms(name,length,width,data_quality,note) VALUES (?,?,?,?,?)",

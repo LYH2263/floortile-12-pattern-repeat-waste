@@ -28,3 +28,7 @@ body { margin: 0; font-family: system-ui, sans-serif; background: #f4f0ea; }
 .mini-grid .cell { background: #16a085; aspect-ratio: 1; opacity: 0.85; }
 label { display: block; margin: 0.5rem 0; }
 button { margin-right: 0.5rem; padding: 0.4rem 0.8rem; }
+.detail-row td { background: #faf7f2; }
+.detail-row ul { margin: 0.25rem 0; padding-left: 1.25rem; }
+.saved { color: #16a085; }
+.tile-card input { width: 100%; }
